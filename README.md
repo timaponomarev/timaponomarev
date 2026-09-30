@@ -4,7 +4,7 @@ Experienced in functional testing, requirements analysis, UI testing, and creati
 Strong knowledge of software testing fundamentals, test design techniques, and software development processes. 
 Currently expanding my technical skills in test automation with Java. Detail-oriented, responsible, and focus.
 
-## Tools
+# Tools
 API: Postman, Swagger, JUnit, REST Assured  
 Databases: MySQL (DBeaver) 
 Version Control: Git, GitHub  
