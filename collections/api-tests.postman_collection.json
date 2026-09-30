@@ -1,0 +1,866 @@
+{
+  "info": {
+    "_postman_id": "05993658-fdd6-47e5-a3e7-61c9b4c76718",
+    "name": "API Testing Portfolio",
+    "description": "# API Testing Portfolio — QA Junior+\n\n15 основных запросов, 4 логические папки. Каждый запрос содержит цель, ожидаемый статус и автотесты. Дополнительный подготовительный GET в PATCH выполняется скриптом и не является отдельным элементом коллекции.\n\n## Запуск\n1. Import → выбрать этот JSON-файл.\n2. Открыть коллекцию → Run → выбрать все 15 запросов → Run. Внешний environment не нужен: переменные уже заданы в коллекции. Не создавайте одноимённые environment-переменные: они перекроют значения коллекции.\n3. Для отдельного запроса нажать Send, результаты доступны в Test Results.\n\n## Покрытие\nGET, POST, PUT, PATCH, DELETE; HTTP 200/201/404; Content-Type; JSON Schema; вложенные объекты; типы полей; query/path parameters; фильтрация; связи ресурсов; уникальность ID; динамические данные; передача переменных; негативные сценарии.\n\n## Ограничения API\nJSONPlaceholder — публичный учебный fake API, без авторизации. POST/PUT/PATCH/DELETE имитируют изменения и не сохраняют их. Поэтому коллекция не заявляет настоящий E2E create→get→update→delete. Проверки 401/403 и обязательных полей требуют API с соответствующим контрактом; здесь они намеренно не выдуманы.\n\nПорог времени ответа — опциональная учебная проверка, а не SLA публичного сервиса. Для включения установите checkResponseTime=true, при необходимости измените maxResponseTimeMs (по умолчанию 3000). Сеть и нагрузка влияют на результат.\n\n## Связь с Java\nPostman использует JavaScript. Те же сценарии можно перенести в Java/JUnit/REST Assured: statusCode, header, body, JSON Schema и сравнение полей. Maven относится к будущему Java-проекту, для этой коллекции он не нужен.\n\n## Документация\n- https://jsonplaceholder.typicode.com/guide/\n- https://learning.postman.com/docs/tests-and-scripts/write-scripts/test-examples/\n\nКоллекция не содержит токенов и паролей; файл можно положить в GitHub в папку collections/.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "50542445",
+    "_collection_link": "https://go.postman.co/collection/50542445-05993658-fdd6-47e5-a3e7-61c9b4c76718?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "01. Users",
+      "item": [
+        {
+          "name": "01 | GET | Список пользователей и сохранение переменных",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Ответ — непустой массив\", () => {",
+                  "    pm.expect(pm.response.json()).to.be.an(\"array\").that.is.not.empty;",
+                  "});",
+                  "",
+                  "pm.test(\"ID пользователей уникальны\", () => {",
+                  "    const data = pm.response.json();",
+                  "    pm.expect(new Set(data.map(x => x.id)).size).to.equal(data.length);",
+                  "});",
+                  "",
+                  "pm.test(\"Сохранены userId и username первого пользователя\", () => {",
+                  "    const first = pm.response.json()[0];",
+                  "    pm.expect(first.id).to.be.a(\"number\");",
+                  "    pm.expect(first.username).to.be.a(\"string\").and.not.empty;",
+                  "    pm.collectionVariables.set(\"userId\", String(first.id));",
+                  "    pm.collectionVariables.set(\"username\", first.username);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
+            },
+            "description": "**TC-01. Список пользователей и сохранение переменных**\n\nЦель: Проверить список, уникальность ID и передачу данных следующим запросам.\n\nОжидаемый HTTP-статус: **200**. Остальные ожидаемые результаты указаны в именах автотестов (Scripts → Post-response).\n\nЗапрос можно запускать отдельно с исходными переменными коллекции."
+          },
+          "response": []
+        },
+        {
+          "name": "02 | GET | Пользователь по ID и JSON Schema",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"ID совпадает с запрошенным\", () => {",
+                  "    pm.expect(pm.response.json().id).to.equal(Number(pm.variables.get(\"userId\")));",
+                  "});",
+                  "",
+                  "pm.test(\"Ответ соответствует JSON Schema\", () => {",
+                  "    pm.response.to.have.jsonSchema({\"type\": \"object\", \"required\": [\"id\", \"name\", \"username\", \"email\", \"address\", \"phone\", \"website\", \"company\"], \"properties\": {\"id\": {\"type\": \"integer\", \"minimum\": 1}, \"name\": {\"type\": \"string\", \"minLength\": 1}, \"username\": {\"type\": \"string\", \"minLength\": 1}, \"email\": {\"type\": \"string\", \"minLength\": 1}, \"phone\": {\"type\": \"string\", \"minLength\": 1}, \"website\": {\"type\": \"string\", \"minLength\": 1}, \"address\": {\"type\": \"object\", \"required\": [\"street\", \"city\", \"zipcode\", \"geo\"], \"properties\": {\"geo\": {\"type\": \"object\", \"required\": [\"lat\", \"lng\"], \"properties\": {\"lat\": {\"type\": \"string\"}, \"lng\": {\"type\": \"string\"}}}}}, \"company\": {\"type\": \"object\", \"required\": [\"name\"]}}});",
+                  "});",
+                  "",
+                  "pm.test(\"Email имеет базовую корректную структуру\", () => {",
+                  "    pm.expect(pm.response.json().email).to.match(/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "description": "**TC-02. Пользователь по ID и JSON Schema**\n\nЦель: Проверить path-параметр, поля и вложенные объекты пользователя.\n\nОжидаемый HTTP-статус: **200**. Остальные ожидаемые результаты указаны в именах автотестов (Scripts → Post-response).\n\nЗапрос можно запускать отдельно с исходными переменными коллекции."
+          },
+          "response": []
+        },
+        {
+          "name": "03 | GET | Фильтрация пользователей по username",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Найден один пользователь с нужным username\", () => {",
+                  "    const data = pm.response.json();",
+                  "    pm.expect(data).to.be.an(\"array\").with.lengthOf(1);",
+                  "    pm.expect(data[0].username).to.equal(pm.variables.get(\"username\"));",
+                  "    pm.expect(data[0].id).to.equal(Number(pm.variables.get(\"userId\")));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users?username={{username}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "username",
+                  "value": "{{username}}"
+                }
+              ]
+            },
+            "description": "**TC-03. Фильтрация пользователей по username**\n\nЦель: Проверить query-параметр и точное совпадение найденного пользователя.\n\nОжидаемый HTTP-статус: **200**. Остальные ожидаемые результаты указаны в именах автотестов (Scripts → Post-response).\n\nЗапрос можно запускать отдельно с исходными переменными коллекции."
+          },
+          "response": []
+        }
+      ],
+      "description": "Позитивные сценарии"
+    },
+    {
+      "name": "02. Resources",
+      "item": [
+        {
+          "name": "04 | GET | Список публикаций",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Ответ — непустой массив\", () => {",
+                  "    pm.expect(pm.response.json()).to.be.an(\"array\").that.is.not.empty;",
+                  "});",
+                  "",
+                  "pm.test(\"Каждая публикация соответствует JSON Schema\", () => {",
+                  "    const schema = {\"type\": \"object\", \"required\": [\"userId\", \"id\", \"title\", \"body\"], \"properties\": {\"userId\": {\"type\": \"integer\", \"minimum\": 1}, \"id\": {\"type\": \"integer\", \"minimum\": 1}, \"title\": {\"type\": \"string\", \"minLength\": 1}, \"body\": {\"type\": \"string\", \"minLength\": 1}}};",
+                  "    pm.response.json().forEach(post => pm.expect(post).to.have.jsonSchema(schema));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/posts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts"
+              ]
+            },
+            "description": "**TC-04. Список публикаций**\n\nЦель: Проверить список ресурсов и структуру каждой публикации.\n\nОжидаемый HTTP-статус: **200**. Остальные ожидаемые результаты указаны в именах автотестов (Scripts → Post-response).\n\nЗапрос можно запускать отдельно с исходными переменными коллекции."
+          },
+          "response": []
+        },
+        {
+          "name": "05 | GET | Публикация по ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"ID совпадает с postId\", () => {",
+                  "    pm.expect(pm.response.json().id).to.equal(Number(pm.variables.get(\"postId\")));",
+                  "});",
+                  "",
+                  "pm.test(\"Ответ соответствует JSON Schema\", () => {",
+                  "    pm.response.to.have.jsonSchema({\"type\": \"object\", \"required\": [\"userId\", \"id\", \"title\", \"body\"], \"properties\": {\"userId\": {\"type\": \"integer\", \"minimum\": 1}, \"id\": {\"type\": \"integer\", \"minimum\": 1}, \"title\": {\"type\": \"string\", \"minLength\": 1}, \"body\": {\"type\": \"string\", \"minLength\": 1}}});",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/posts/{{postId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts",
+                "{{postId}}"
+              ]
+            },
+            "description": "**TC-05. Публикация по ID**\n\nЦель: Проверить получение ресурса по path-параметру.\n\nОжидаемый HTTP-статус: **200**. Остальные ожидаемые результаты указаны в именах автотестов (Scripts → Post-response).\n\nЗапрос можно запускать отдельно с исходными переменными коллекции."
+          },
+          "response": []
+        },
+        {
+          "name": "06 | GET | Фильтрация публикаций по userId",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Ответ — непустой массив\", () => {",
+                  "    pm.expect(pm.response.json()).to.be.an(\"array\").that.is.not.empty;",
+                  "});",
+                  "",
+                  "pm.test(\"Все публикации принадлежат нужному пользователю\", () => {",
+                  "    pm.response.json().forEach(post => pm.expect(post.userId).to.equal(Number(pm.variables.get(\"userId\"))));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/posts?userId={{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": "**TC-06. Фильтрация публикаций по userId**\n\nЦель: Проверить, что фильтр не возвращает публикации другого пользователя.\n\nОжидаемый HTTP-статус: **200**. Остальные ожидаемые результаты указаны в именах автотестов (Scripts → Post-response).\n\nЗапрос можно запускать отдельно с исходными переменными коллекции."
+          },
+          "response": []
+        },
+        {
+          "name": "07 | GET | Комментарии публикации: вложенный маршрут",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Ответ — непустой массив\", () => {",
+                  "    pm.expect(pm.response.json()).to.be.an(\"array\").that.is.not.empty;",
+                  "});",
+                  "",
+                  "pm.test(\"Комментарии связаны с нужной публикацией\", () => {",
+                  "    pm.response.json().forEach(comment => {",
+                  "        pm.expect(comment.postId).to.equal(Number(pm.variables.get(\"postId\")));",
+                  "        pm.expect(comment.id).to.be.a(\"number\");",
+                  "        [\"name\", \"email\", \"body\"].forEach(key => pm.expect(comment[key]).to.be.a(\"string\").and.not.empty);",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/posts/{{postId}}/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts",
+                "{{postId}}",
+                "comments"
+              ]
+            },
+            "description": "**TC-07. Комментарии публикации: вложенный маршрут**\n\nЦель: Проверить связь ресурсов и структуру комментариев.\n\nОжидаемый HTTP-статус: **200**. Остальные ожидаемые результаты указаны в именах автотестов (Scripts → Post-response).\n\nЗапрос можно запускать отдельно с исходными переменными коллекции."
+          },
+          "response": []
+        },
+        {
+          "name": "08 | GET | Задачи пользователя и boolean-поле",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Ответ — непустой массив\", () => {",
+                  "    pm.expect(pm.response.json()).to.be.an(\"array\").that.is.not.empty;",
+                  "});",
+                  "",
+                  "pm.test(\"У каждой задачи верный userId и boolean completed\", () => {",
+                  "    pm.response.json().forEach(todo => {",
+                  "        pm.expect(todo.userId).to.equal(Number(pm.variables.get(\"userId\")));",
+                  "        pm.expect(todo.completed).to.be.a(\"boolean\");",
+                  "        pm.expect(todo.id).to.be.a(\"number\");",
+                  "        pm.expect(todo.title).to.be.a(\"string\").and.not.empty;",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/todos?userId={{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "todos"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": "**TC-08. Задачи пользователя и boolean-поле**\n\nЦель: Проверить фильтрацию задач и тип поля completed.\n\nОжидаемый HTTP-статус: **200**. Остальные ожидаемые результаты указаны в именах автотестов (Scripts → Post-response).\n\nЗапрос можно запускать отдельно с исходными переменными коллекции."
+          },
+          "response": []
+        }
+      ],
+      "description": "Списки, path/query parameters и связи ресурсов."
+    },
+    {
+      "name": "03. CRUD",
+      "item": [
+        {
+          "name": "09 | POST | Создание публикации",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Динамическое значение уникально для каждого запуска.",
+                  "pm.variables.set(\"newTitle\", \"QA portfolio \" + pm.variables.replaceIn(\"{{$guid}}\"));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Ответ соответствует JSON Schema\", () => {",
+                  "    pm.response.to.have.jsonSchema({\"type\": \"object\", \"required\": [\"userId\", \"id\", \"title\", \"body\"], \"properties\": {\"userId\": {\"type\": \"integer\", \"minimum\": 1}, \"id\": {\"type\": \"integer\", \"minimum\": 1}, \"title\": {\"type\": \"string\", \"minLength\": 1}, \"body\": {\"type\": \"string\", \"minLength\": 1}}});",
+                  "});",
+                  "",
+                  "pm.test(\"Сервер вернул отправленные данные\", () => {",
+                  "    const sent = JSON.parse(pm.variables.replaceIn(pm.request.body.raw));",
+                  "    const actual = pm.response.json();",
+                  "    [\"title\", \"body\", \"userId\"].forEach(key => pm.expect(actual[key]).to.deep.equal(sent[key]));",
+                  "});",
+                  "",
+                  "pm.test(\"Созданному ресурсу назначен ID\", () => {",
+                  "    pm.expect(pm.response.json().id).to.be.a(\"number\").and.above(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json; charset=UTF-8"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"{{newTitle}}\",\n  \"body\": \"Portfolio API test body\",\n  \"userId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/posts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts"
+              ]
+            },
+            "description": "**TC-09. Создание публикации**\n\nЦель: Проверить HTTP 201, ID и совпадение ответа с отправленными данными. Создание имитируется; ID нельзя использовать для последующего GET.\n\nОжидаемый HTTP-статус: **201**. Остальные ожидаемые результаты указаны в именах автотестов (Scripts → Post-response).\n\nЗапрос можно запускать отдельно с исходными переменными коллекции."
+          },
+          "response": []
+        },
+        {
+          "name": "10 | PUT | Полное обновление публикации",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Ответ содержит ID и все новые значения\", () => {",
+                  "    const actual = pm.response.json();",
+                  "    const sent = JSON.parse(pm.request.body.raw);",
+                  "    pm.expect(actual.id).to.equal(Number(pm.variables.get(\"postId\")));",
+                  "    [\"title\", \"body\", \"userId\"].forEach(key => pm.expect(actual[key]).to.deep.equal(sent[key]));",
+                  "});",
+                  "",
+                  "pm.test(\"Ответ соответствует JSON Schema\", () => {",
+                  "    pm.response.to.have.jsonSchema({\"type\": \"object\", \"required\": [\"userId\", \"id\", \"title\", \"body\"], \"properties\": {\"userId\": {\"type\": \"integer\", \"minimum\": 1}, \"id\": {\"type\": \"integer\", \"minimum\": 1}, \"title\": {\"type\": \"string\", \"minLength\": 1}, \"body\": {\"type\": \"string\", \"minLength\": 1}}});",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json; charset=UTF-8"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated title\",\n  \"body\": \"Updated body\",\n  \"userId\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/posts/{{postId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts",
+                "{{postId}}"
+              ]
+            },
+            "description": "**TC-10. Полное обновление публикации**\n\nЦель: Проверить замену всех отправленных полей в ответе. Изменение не сохраняется на сервере.\n\nОжидаемый HTTP-статус: **200**. Остальные ожидаемые результаты указаны в именах автотестов (Scripts → Post-response).\n\nЗапрос можно запускать отдельно с исходными переменными коллекции."
+          },
+          "response": []
+        },
+        {
+          "name": "11 | PATCH | Частичное обновление публикации",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Подготовительный GET обеспечивает независимый запуск PATCH.",
+                  "pm.variables.unset(\"originalPost\");",
+                  "pm.sendRequest({url: pm.variables.replaceIn(\"{{baseUrl}}/posts/{{postId}}\"), method: \"GET\", header: {Accept: \"application/json\"}}, (error, response) => {",
+                  "    pm.test(\"Подготовка PATCH: исходная публикация получена\", () => {",
+                  "        pm.expect(error).to.equal(null);",
+                  "        pm.expect(response.code).to.equal(200);",
+                  "        pm.expect(response.json().id).to.equal(Number(pm.variables.get(\"postId\")));",
+                  "    });",
+                  "    if (!error && response.code === 200) {",
+                  "        pm.variables.set(\"originalPost\", JSON.stringify(response.json()));",
+                  "    }",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Заголовок изменился, остальные поля сохранились\", () => {",
+                  "    const before = JSON.parse(pm.variables.get(\"originalPost\"));",
+                  "    const after = pm.response.json();",
+                  "    pm.expect(after.title).to.equal(\"Partially updated title\");",
+                  "    [\"id\", \"userId\", \"body\"].forEach(key => pm.expect(after[key]).to.deep.equal(before[key]));",
+                  "});",
+                  "",
+                  "pm.test(\"Ответ соответствует JSON Schema\", () => {",
+                  "    pm.response.to.have.jsonSchema({\"type\": \"object\", \"required\": [\"userId\", \"id\", \"title\", \"body\"], \"properties\": {\"userId\": {\"type\": \"integer\", \"minimum\": 1}, \"id\": {\"type\": \"integer\", \"minimum\": 1}, \"title\": {\"type\": \"string\", \"minLength\": 1}, \"body\": {\"type\": \"string\", \"minLength\": 1}}});",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json; charset=UTF-8"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Partially updated title\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/posts/{{postId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts",
+                "{{postId}}"
+              ]
+            },
+            "description": "**TC-11. Частичное обновление публикации**\n\nЦель: Проверить изменение только title. Перед PATCH получить исходный ресурс для сравнения остальных полей. Изменение имитируется.\n\nОжидаемый HTTP-статус: **200**. Остальные ожидаемые результаты указаны в именах автотестов (Scripts → Post-response).\n\nЗапрос можно запускать отдельно с исходными переменными коллекции."
+          },
+          "response": []
+        },
+        {
+          "name": "12 | DELETE | Удаление публикации",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Ответ — пустой объект\", () => {",
+                  "    pm.expect(pm.response.json()).to.deep.equal({});",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/posts/{{postId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts",
+                "{{postId}}"
+              ]
+            },
+            "description": "**TC-12. Удаление публикации**\n\nЦель: Проверить HTTP 200 и пустой JSON-объект. Удаление имитируется; последующий GET продолжит возвращать ресурс.\n\nОжидаемый HTTP-статус: **200**. Остальные ожидаемые результаты указаны в именах автотестов (Scripts → Post-response).\n\nЗапрос можно запускать отдельно с исходными переменными коллекции."
+          },
+          "response": []
+        }
+      ],
+      "description": "Проверки ответов на POST, PUT, PATCH, DELETE. Данные не сохраняются."
+    },
+    {
+      "name": "04. Negative",
+      "item": [
+        {
+          "name": "13 | GET | Несуществующая публикация",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Ответ — пустой объект\", () => {",
+                  "    pm.expect(pm.response.json()).to.deep.equal({});",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/posts/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts",
+                "999999"
+              ]
+            },
+            "description": "**TC-13. Несуществующая публикация**\n\nЦель: Проверить обработку неизвестного числового ID: 404 и пустой объект.\n\nОжидаемый HTTP-статус: **404**. Остальные ожидаемые результаты указаны в именах автотестов (Scripts → Post-response).\n\nЗапрос можно запускать отдельно с исходными переменными коллекции."
+          },
+          "response": []
+        },
+        {
+          "name": "14 | GET | Нечисловой ID публикации",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Ответ — пустой объект\", () => {",
+                  "    pm.expect(pm.response.json()).to.deep.equal({});",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/posts/not-a-number",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts",
+                "not-a-number"
+              ]
+            },
+            "description": "**TC-14. Нечисловой ID публикации**\n\nЦель: Проверить некорректный path-параметр. Для JSONPlaceholder ожидается 404, а не выдуманный 400.\n\nОжидаемый HTTP-статус: **404**. Остальные ожидаемые результаты указаны в именах автотестов (Scripts → Post-response).\n\nЗапрос можно запускать отдельно с исходными переменными коллекции."
+          },
+          "response": []
+        },
+        {
+          "name": "15 | GET | Фильтр без совпадений",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Ответ — пустой массив\", () => {",
+                  "    pm.expect(pm.response.json()).to.be.an(\"array\").with.lengthOf(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/posts?userId=999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "posts"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "999999"
+                }
+              ]
+            },
+            "description": "**TC-15. Фильтр без совпадений**\n\nЦель: Проверить отличие пустой выборки от отсутствующего ресурса: 200 и пустой массив.\n\nОжидаемый HTTP-статус: **200**. Остальные ожидаемые результаты указаны в именах автотестов (Scripts → Post-response).\n\nЗапрос можно запускать отдельно с исходными переменными коллекции."
+          },
+          "response": []
+        }
+      ],
+      "description": "Отсутствующий ресурс, некорректный ID, пустая выборка."
+    }
+  ],
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Общие проверки для каждого основного ответа коллекции.",
+          "pm.test(\"Content-Type содержит application/json\", () => {",
+          "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.match(/application\\/json/i);",
+          "});",
+          "pm.test(\"Ответ содержит корректный JSON\", () => {",
+          "    pm.expect(() => pm.response.json()).not.to.throw();",
+          "});",
+          "if (String(pm.variables.get(\"checkResponseTime\")) === \"true\") {",
+          "    pm.test(\"Время ответа ниже учебного порога\", () => {",
+          "        const limit = Number(pm.variables.get(\"maxResponseTimeMs\"));",
+          "        pm.expect(limit).to.be.above(0);",
+          "        pm.expect(pm.response.responseTime).to.be.below(limit);",
+          "    });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://jsonplaceholder.typicode.com"
+    },
+    {
+      "key": "userId",
+      "value": "1"
+    },
+    {
+      "key": "username",
+      "value": "Bret"
+    },
+    {
+      "key": "postId",
+      "value": "1"
+    },
+    {
+      "key": "checkResponseTime",
+      "value": "false"
+    },
+    {
+      "key": "maxResponseTimeMs",
+      "value": "3000"
+    }
+  ]
+}
