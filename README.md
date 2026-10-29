@@ -9,7 +9,7 @@ API: Postman, Swagger, JUnit, REST Assured
 Databases: MySQL (DBeaver) 
 Version Control: Git, GitHub  
 Command Line: Bash  
-TMS: Allure TestOps 
+TMS: Allure TestOps
 Bug-tracking: Jira 
 AI Tools: ChatGPT, Claude  
 Other: Figma, Miro
